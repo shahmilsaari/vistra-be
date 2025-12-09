@@ -1,98 +1,134 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+## Vistra Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS API that manages users, attachments, paths/folders, and audit logs with Prisma + MySQL. This README covers the commands and configuration you need to get the project running locally.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### Prerequisites
 
-## Description
+- **Node.js 20+** (Match the `.nvmrc`/`package.json` engines if present.)
+- **MySQL** 8+/compatible server
+- Optional: `npm` (bundled with Node.js) or `corepack`/`pnpm` if you prefer another package manager.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Getting started
 
-## Project setup
+1. **Install runtime dependencies**
+   ```bash
+   npm install
+   ```
 
-```bash
-$ npm install
-```
+2. **Copy the configuration template**
+   ```bash
+   cp .env.sample .env
+   ```
+   Then update:
+   - `DATABASE_URL` if your MySQL credentials or host differ from `mysql://root@127.0.0.1:3306/vistra`.
+   - `JWT_SECRET` to a secure random string (`openssl rand -hex 32` or similar).
+   - `FRONTEND_URL` (optional) to enable CORS for your client during development.
 
-## Compile and run the project
+#### Required environment variables
 
-```bash
-# development
-$ npm run start
+| Key | Description | Example |
+| --- | ----------- | ------- |
+| `PORT` | HTTP port the server listens on | `4000` |
+| `NODE_ENV` | App environment | `development` / `production` |
+| `STORAGE_BASE_URL` | Base URL used to build attachment URLs | `http://localhost:4000` |
+| `DATABASE_URL` | Prisma database connection URL | `mysql://root@127.0.0.1:3306/vistra` |
+| `MYSQL_HOST` / `MYSQL_PORT` / `MYSQL_USER` / `MYSQL_PASSWORD` / `MYSQL_DATABASE` | Optional MySQL overrides if you build the URL manually | `127.0.0.1`, `3306`, `root`, `` , `vistra` |
+| `JWT_SECRET` | Secret used to sign JWTs | `change-me-to-a-secure-random-string` |
+| `JWT_EXPIRES_IN` | Token expiration duration | `3600s` |
+| `FRONTEND_URL` | Origin allowed in CORS | `http://localhost:3000` |
 
-# watch mode
-$ npm run start:dev
+3. **Generate Prisma client**
+   ```bash
+   npm run prisma:generate
+   ```
 
-# production mode
-$ npm run start:prod
-```
+4. **Apply migrations (creates schema + dev seeds)**
+   ```bash
+   npm run prisma:migrate
+   ```
+   If needed, run `npm run prisma:seed` to load additional fixtures defined in `prisma/seed.ts`.
 
-## Run tests
+### Running the app
 
-```bash
-# unit tests
-$ npm run test
+- **Development (auto-restarts)**
+  ```bash
+  npm run start:dev
+  ```
+  This spins up Nest with hot reloading and logs requests to the console.
 
-# e2e tests
-$ npm run test:e2e
+- **Production build**
+  ```bash
+  npm run build
+  npm run start:prod
+  ```
 
-# test coverage
-$ npm run test:cov
-```
+- **Debugging**
+  ```bash
+  npm run start:debug
+  ```
 
-## Deployment
+The HTTP API is prefixed with `/api/v1`. Swagger docs are available at `http://localhost:4000/api/docs` (port comes from `PORT` in `.env`).
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Database / storage tips
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- Uploaded files land in the `uploads/` directory relative to the project root. Make sure the directory exists with `mkdir -p uploads` and the process has write permissions.
+- Prisma models live under `prisma/schema.prisma`; regenerate the client after schema changes via `npm run prisma:generate`.
+- Use `npm run prisma:studio` to inspect data visually.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+### Authentication flow
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- Registers/logins happen through `/api/v1/auth`, and successful logins set HTTP-only cookies (`accessToken`, `vistra_token`, `vistra_user`).
+- Protecting routes uses `JwtAuthGuard`. Use the shared `CurrentUser` decorator to inject the parsed `JwtPayload`.
+- Login failures return `401 Unauthorized` with the message `Email and Password is incorrect`.
 
-## Resources
+### Querying attachments
 
-Check out a few resources that may come in handy when working with NestJS:
+- Attachments can be listed with `/api/v1/attachments`. Support for `folder`, `pathId`, `kind`, `search`, paging, and sorting is defined in `QueryAttachmentsDto` (`src/modules/attachments/dto/query-attachments.dto.ts`).
+- Use `/api/v1/attachments/directory/:folder` to list folder contents, and `/api/v1/attachments/:id` to fetch an attachment with logs.
+- Uploads POST to `/api/v1/attachments` with up to 10 files (50 MB per file). Backend logs events via `LogsService`.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Quality & maintenance
 
-## Support
+- **Linting**
+  ```bash
+  npm run lint
+  ```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- **Unit tests**
+  ```bash
+  npm run test
+  ```
 
-## Stay in touch
+- **e2e**
+  ```bash
+  npm run test:e2e
+  ```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- **Formatting**
+  ```bash
+  npm run format
+  ```
 
-## License
+### Troubleshooting
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- **`EPERM 127.0.0.1` during Jest:** Verify no other process blocks the port; run tests after freeing the socket or disable Jest watch mode.
+- **Uploads missing:** Ensure `uploads/` exists and Nest has write permission; the controller stores files with Multer’s disk storage.
+- **Environment issues:** `npm run start:dev` reads `.env` automatically via `@nestjs/config`. Drop secrets into `.env` and restart the server if you change them.
+
+### Useful commands
+
+| Command | Purpose |
+| --- | --- |
+| `npm run prisma:migrate` | Apply Prisma schema migrations |
+| `npm run prisma:seed` | Seed sample data (runs via `ts-node`) |
+| `npm run start:dev` | Run the server in watch mode |
+| `npm run lint` | Auto-fix/validate TypeScript lint issues |
+| `npm run test` | Run Jest unit suite |
+
+### Further reading
+
+- `src/modules/attachments` — Attachment logic, query builders, service/repository split.
+- `src/common` — Shared decorators, filters, DTOs, and utilities like error normalization.
+- `src/modules/auth` & `src/modules/users` — Auth flow and user profile APIs.
+
+Keep the README in sync with any platform-specific deployment docs you add later.
