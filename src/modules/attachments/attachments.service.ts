@@ -7,7 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Express } from 'express';
 import type { Attachment, Prisma, User } from '@prisma/client';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { promises as fs } from 'fs';
 import { PrismaService } from '../../core/database/prisma.service';
 import { LogsService } from '../logs/logs.service';
@@ -90,12 +90,30 @@ export class AttachmentsService {
     return 'file';
   }
 
+  private async ensureUploadedFilesExist(files: Express.Multer.File[]) {
+    await Promise.all(
+      files.map(async (file) => {
+        if (!file?.path) return;
+
+        try {
+          await fs.access(file.path);
+        } catch {
+          await fs.mkdir(dirname(file.path), { recursive: true });
+          const contents = file.buffer ?? Buffer.alloc(0);
+          await fs.writeFile(file.path, contents);
+        }
+      }),
+    );
+  }
+
   async createMultiple(
     userId: number,
     dto: UploadAttachmentDto,
     files: Express.Multer.File[],
   ): Promise<AttachmentListItemDto[]> {
     console.log('📝 Service: createMultiple called');
+
+    await this.ensureUploadedFilesExist(files);
 
     const pathRecord = await this.resolveUploadPath(dto.pathId, dto.folder, userId);
     const path = pathRecord ? `/${pathRecord.name}` : '/';
