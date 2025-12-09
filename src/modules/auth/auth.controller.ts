@@ -40,7 +40,7 @@ export class AuthController {
 
   @Post('logout')
   @ApiOperation({ summary: 'Logout and clear session' })
-  async logout(@Res({ passthrough: true }) res: Response) {
+  logout(@Res({ passthrough: true }) res: Response) {
     this.clearAuthCookies(res);
 
     return {
@@ -52,7 +52,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
-  async getProfile(@CurrentUser() user: User) {
+  getProfile(@CurrentUser() user: User) {
     return {
       id: user.id,
       email: user.email,

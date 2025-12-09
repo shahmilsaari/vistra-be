@@ -1,6 +1,1 @@
-export interface JwtPayload {
-  sub: string;
-  email: string;
-  name: string;
-  role: string;
-}
+export type { JwtPayload } from '../../../common/interfaces/jwt-payload.interface';

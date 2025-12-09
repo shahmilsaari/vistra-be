@@ -19,14 +19,15 @@ import { extname } from 'path';
 import { existsSync, mkdirSync } from 'node:fs';
 import type { Express } from 'express';
 import { JwtAuthGuard } from '../users/guards/jwt-auth.guard';
-import { CurrentUser } from '../users/decorators/current-user.decorator';
-import type { JwtPayload } from '../users/interfaces/jwt-payload.interface';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { AttachmentsService } from './attachments.service';
 import { QueryAttachmentsDto } from './dto/query-attachments.dto';
 import { UploadAttachmentDto } from './dto/upload-attachment.dto';
 import { CreateFolderDto } from './dto/create-folder.dto';
 import { UpdateAttachmentDto } from './dto/update-attachment.dto';
 import { QueryLogsDto } from '../logs/dto/query-logs.dto';
+import { ensureError } from '../../common/utils/errors';
 
 const UPLOAD_DIRECTORY = `${process.cwd()}/uploads`;
 if (!existsSync(UPLOAD_DIRECTORY)) {
@@ -86,10 +87,11 @@ export class AttachmentsController {
       const result = await this.attachmentsService.createMultiple(Number(user.sub), dto, files);
       console.log(`✅ Upload completed successfully! ${result.length} file(s) saved`);
       return result;
-    } catch (error) {
-      console.error('❌ Upload failed:', error.message);
-      console.error('Stack:', error.stack);
-      throw error;
+    } catch (error: unknown) {
+      const uploadError = ensureError(error);
+      console.error('❌ Upload failed:', uploadError.message);
+      console.error('Stack:', uploadError.stack);
+      throw uploadError;
     }
   }
 

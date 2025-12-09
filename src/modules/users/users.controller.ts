@@ -14,7 +14,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
-  async getProfile(@CurrentUser() user: User) {
+  getProfile(@CurrentUser() user: User) {
     return {
       id: user.id,
       email: user.email,

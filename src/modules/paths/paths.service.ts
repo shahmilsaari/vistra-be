@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Prisma, Path, User } from '@prisma/client';
+import type { Path, User } from '@prisma/client';
 import { PrismaService } from '../../core/database/prisma.service';
 import { LogsService } from '../logs/logs.service';
 import { CreatePathDto } from './dto/create-path.dto';

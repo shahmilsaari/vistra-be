@@ -3,7 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import express from 'express';
+import express, { type NextFunction, type Request, type Response } from 'express';
 import { join } from 'path';
 import { AppModule } from './app.module';
 
@@ -35,7 +35,7 @@ async function bootstrap() {
   app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
   // Increase body size limit for file uploads
-  app.use((req, res, next) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.includes('/attachments')) {
       // Skip body parsing for file uploads - handled by multer
       next();
@@ -76,4 +76,4 @@ async function bootstrap() {
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
 
-bootstrap();
+void bootstrap();

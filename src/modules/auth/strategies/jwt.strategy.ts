@@ -5,16 +5,21 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import type { Request } from 'express';
 import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
+type RequestWithCookies = Request & {
+  cookies?: {
+    accessToken?: string;
+    [key: string]: string | undefined;
+  };
+};
+
+const cookieExtractor = (request: RequestWithCookies) => request.cookies?.accessToken ?? null;
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        // Extract from cookie first
-        (request: Request) => {
-          return request?.cookies?.accessToken;
-        },
-        // Fallback to Authorization header
+        cookieExtractor,
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,

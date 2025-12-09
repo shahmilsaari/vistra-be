@@ -14,9 +14,14 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  describe('health', () => {
+    it('should return the health payload', () => {
+      const response = appController.health();
+      expect(response).toMatchObject({
+        status: 'ok',
+        service: 'vistra-be',
+      });
+      expect(typeof response.timestamp).toBe('string');
     });
   });
 });
