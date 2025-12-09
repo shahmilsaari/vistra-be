@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model User {
+  id                 Int          @id @default(autoincrement())
+  email              String       @unique
+  name               String
+  password           String
+  role               Role         @default(MEMBER)
+  paths              Path[]
+  attachments        Attachment[] @relation("AttachmentOwner")
+  createdAttachments Attachment[] @relation("AttachmentCreatedBy")
+  updatedAttachments Attachment[] @relation("AttachmentUpdatedBy")
+  createdLogs        Log[]        @relation("LogCreatedBy")
+  updatedLogs        Log[]        @relation("LogUpdatedBy")
+  remarks            Remark[]
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@map("users")
+}
+
+model Path {
+  id          Int          @id @default(autoincrement())
+  name        String
+  owner       User         @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  parent      Path?        @relation("PathChildren", fields: [parentId], references: [id])
+  parentId    Int?
+  children    Path[]       @relation("PathChildren")
+  attachments Attachment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([ownerId, name])
+  @@map("paths")
+}
+
+model Attachment {
+  id          Int      @id @default(autoincrement())
+  name        String
+  kind        String
+  size        Int
+  mime        String
+  storageKey  String
+  path        String   @default("/")
+  pathId      Int?
+  pathRecord  Path?    @relation(fields: [pathId], references: [id])
+  user        User     @relation("AttachmentOwner", fields: [userId], references: [id])
+  userId      Int
+  createdBy   User     @relation("AttachmentCreatedBy", fields: [createdById], references: [id])
+  createdById Int
+  updatedBy   User     @relation("AttachmentUpdatedBy", fields: [updatedById], references: [id])
+  updatedById Int
+  logs        Log[]
+  remarks     Remark[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("attachments")
+}
+
+model Remark {
+  id           Int        @id @default(autoincrement())
+  attachment   Attachment @relation(fields: [attachmentId], references: [id])
+  attachmentId Int
+  title        String
+  message      String
+  createdBy    User       @relation(fields: [createdById], references: [id])
+  createdById  Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("remarks")
+}
+
+model Log {
+  id           Int         @id @default(autoincrement())
+  action       String
+  detail       String?
+  attachment   Attachment? @relation(fields: [attachmentId], references: [id])
+  attachmentId Int?
+  createdBy    User        @relation("LogCreatedBy", fields: [createdById], references: [id])
+  createdById  Int
+  updatedBy    User?       @relation("LogUpdatedBy", fields: [updatedById], references: [id])
+  updatedById  Int?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@map("logs")
+}
