@@ -48,6 +48,12 @@ A NestJS API that manages users, attachments, paths/folders, and audit logs with
    ```
    If needed, run `npm run prisma:seed` to load additional fixtures defined in `prisma/seed.ts`.
 
+5. **Seed default admin (no frontend registration yet)**
+   ```bash
+   npm run prisma:seed
+   ```
+   The seed script checks for `admin@sample.com`, hashes `12345678a`, and creates that admin user with `Role.ADMIN`, along with a “Documents” path. Run this after wiping the database, and change the password via the API once you have access.
+
 ### Running the app
 
 - **Development (auto-restarts)**
